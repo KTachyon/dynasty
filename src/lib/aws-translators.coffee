@@ -20,26 +20,6 @@ buildExclusiveStartKey = (awsParams, params) ->
       awsValue[key] = dataTrans.toDynamo(params.exclusiveStartKey[key])
     awsParams.ExclusiveStartKey = awsValue
 
-# module.exports.processAllPages = (deferred, dynamo, functionName, params)->
-
-#   stats =
-#     Count: 0
-
-#   resultHandler = (err, result) ->
-#     if err then return deferred.reject(err)
-
-#     deferred.notify dataTrans.fromDynamo result.Items
-#     stats.Count += result.Count
-#     if result.LastEvaluatedKey
-#       params.ExclusiveStartKey = result.LastEvaluatedKey
-#       dynamo[functionName] params, resultHandler
-#     else
-#       deferred.resolve stats
-
-#   dynamo[functionName] params, resultHandler
-#   deferred.promise
-
-
 module.exports.getKeySchema = (tableDescription) ->
   getKeyAndType = (keyType) ->
     keyName = _.find tableDescription.Table.KeySchema, (key) ->
@@ -74,13 +54,13 @@ getKey = (params, keySchema) ->
 
   key
 
-module.exports.deleteItem = (params, options, callback, keySchema) ->
+module.exports.deleteItem = (params, options, keySchema) ->
   awsParams =
     TableName: @name
     Key: getKey(params, keySchema)
   @parent.dynamo.deleteItem(awsParams).promise()
 
-module.exports.batchGetItem = (params, callback, keySchema) ->
+module.exports.batchGetItem = (params, keySchema) ->
   awsParams = {}
   awsParams.RequestItems = {}
   name = @name
@@ -89,7 +69,7 @@ module.exports.batchGetItem = (params, callback, keySchema) ->
     .then (data) ->
       dataTrans.fromDynamo(data.Responses[name])
 
-module.exports.getItem = (params, options, callback, keySchema) ->
+module.exports.getItem = (params, options, keySchema) ->
   awsParams =
     TableName: @name
     Key: getKey(params, keySchema)
@@ -98,7 +78,7 @@ module.exports.getItem = (params, options, callback, keySchema) ->
     .then (data)->
       dataTrans.fromDynamo(data.Item)
 
-module.exports.queryByHashKey = (key, callback, keySchema) ->
+module.exports.queryByHashKey = (key, keySchema) ->
   awsParams =
     TableName: @name
     KeyConditions: {}
@@ -115,7 +95,7 @@ module.exports.queryByHashKey = (key, callback, keySchema) ->
     .then (data) ->
       dataTrans.fromDynamo(data.Items)
 
-module.exports.scan = (params, options, callback, keySchema) ->
+module.exports.scan = (params, options, keySchema) ->
   params ?= {}
   awsParams =
     TableName: @name
@@ -132,7 +112,7 @@ module.exports.scan = (params, options, callback, keySchema) ->
     .then (data)->
       dataTrans.fromDynamo(data.Items)
 
-module.exports.scanPaged = (params, options, callback, keySchema) ->
+module.exports.scanPaged = (params, options, keySchema) ->
   params ?= {}
   awsParams =
     TableName: @name
@@ -157,7 +137,7 @@ module.exports.scanPaged = (params, options, callback, keySchema) ->
         res.lastEvaluatedKey = lastEvaluatedKey
       res
 
-module.exports.scanAll = (params, options, callback, keySchema) ->
+module.exports.scanAll = (params, options, keySchema) ->
   items = []
   page = 0
   scanNext = (exclusiveStartKey) =>
@@ -165,7 +145,7 @@ module.exports.scanAll = (params, options, callback, keySchema) ->
     if exclusiveStartKey?
       options.exclusiveStartKey = exclusiveStartKey
     #console.log("Scanning page #{page} (#{items.length} fetched so far)")
-    @scanPaged(params, options, callback)
+    @scanPaged(params, options)
       .then (res) ->
         items = items.concat(res.items)
         if res.lastEvaluatedKey
@@ -174,7 +154,7 @@ module.exports.scanAll = (params, options, callback, keySchema) ->
           items
   scanNext()
 
-module.exports.query = (params, options, callback, keySchema) ->
+module.exports.query = (params, options, keySchema) ->
   params ?= {}
   awsParams =
     TableName: @name
@@ -190,7 +170,7 @@ module.exports.query = (params, options, callback, keySchema) ->
     .then (data) ->
       dataTrans.fromDynamo(data.Items)
 
-module.exports.queryPaged = (params, options, callback, keySchema) ->
+module.exports.queryPaged = (params, options, keySchema) ->
   params ?= {}
   awsParams =
     TableName: @name
@@ -213,14 +193,14 @@ module.exports.queryPaged = (params, options, callback, keySchema) ->
         res.lastEvaluatedKey = lastEvaluatedKey
       res
 
-module.exports.putItem = (obj, options, callback) ->
+module.exports.putItem = (obj, options) ->
   awsParams =
     TableName: @name
     Item: dataTrans.toDynamo(obj)
 
   @parent.dynamo.putItem(awsParams).promise()
 
-module.exports.updateItem = (params, obj, options, callback, keySchema) ->
+module.exports.updateItem = (params, obj, options, keySchema) ->
   key = getKey(params, keySchema)
 
   # Set up the Expression Attribute Values map.

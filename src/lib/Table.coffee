@@ -3,7 +3,6 @@ dataTrans = require('./data-translators')
 size = require('lodash/size')
 compact = require('lodash/compact')
 values = require('lodash/values')
-isFunction = require('lodash/isFunction')
 debug = require('debug')('dynasty')
 
 class Table
@@ -13,82 +12,73 @@ class Table
       @hasRangeKey = (4 == size compact values keySchema)
       keySchema
 
-
   ###
   Item Operations
   ###
 
   # Wrapper around DynamoDB's batchGetItem
-  batchFind: (params, callback = null) ->
+  batchFind: (params) ->
     debug "batchFind() - #{params}"
-    @key.then awsTrans.batchGetItem.bind(this, params, callback)
+    @key.then awsTrans.batchGetItem.bind(this, params)
 
-  findAll: (params, callback = null) ->
+  findAll: (params) ->
     debug "findAll() - #{params}"
-    @key.then awsTrans.queryByHashKey.bind(this, params, callback)
+    @key.then awsTrans.queryByHashKey.bind(this, params)
 
   # Wrapper around DynamoDB's getItem
-  find: (params, options = {}, callback = null) ->
+  find: (params, options = {}) ->
     debug "find() - #{params}"
-    @key.then awsTrans.getItem.bind(this, params, options, callback)
+    @key.then awsTrans.getItem.bind(this, params, options)
 
   # Wrapper around DynamoDB's scan
-  scan: (params, options = {}, callback = null) ->
+  scan: (params, options = {}) ->
     debug "scan() - #{params}"
-    @key.then awsTrans.scan.bind(this, params, options, callback)
+    @key.then awsTrans.scan.bind(this, params, options)
 
-  scanPaged: (params, options = {}, callback = null) ->
+  scanPaged: (params, options = {}) ->
     debug "scanPaged() - #{params}"
-    @key.then awsTrans.scanPaged.bind(this, params, options, callback)
+    @key.then awsTrans.scanPaged.bind(this, params, options)
 
   # Will call scan, page through each page and return all results
-  scanAll: (params, options = {}, callback = null) ->
+  scanAll: (params, options = {}) ->
     debug "scanAll() - #{params}"
-    @key.then awsTrans.scanAll.bind(this, params, options, callback)
+    @key.then awsTrans.scanAll.bind(this, params, options)
 
   # Wrapper around DynamoDB's query
-  query: (params, options = {}, callback = null) ->
+  query: (params, options = {}) ->
     debug "query() - #{params}"
-    @key.then awsTrans.query.bind(this, params, options, callback)
+    @key.then awsTrans.query.bind(this, params, options)
 
   # Wrapper around DynamoDB's query
-  queryPaged: (params, options = {}, callback = null) ->
+  queryPaged: (params, options = {}) ->
     debug "query() - #{params}"
-    @key.then awsTrans.queryPaged.bind(this, params, options, callback)
+    @key.then awsTrans.queryPaged.bind(this, params, options)
 
 
   # Wrapper around DynamoDB's putItem
-  insert: (obj, options = {}, callback = null) ->
+  insert: (obj, options = {}) ->
     debug "insert() - " + JSON.stringify obj
-    if isFunction options
-      callback = options
-      options = {}
+    @key.then awsTrans.putItem.bind(this, obj, options)
 
-    @key.then awsTrans.putItem.bind(this, obj, options, callback)
-
-  remove: (params, options, callback = null) ->
-    @key.then awsTrans.deleteItem.bind(this, params, options, callback)
+  remove: (params, options = {}) ->
+    @key.then awsTrans.deleteItem.bind(this, params, options)
 
   # Wrapper around DynamoDB's updateItem
-  update: (params, obj, options, callback = null) ->
+  update: (params, obj, options = {}) ->
     debug "update() - " + JSON.stringify obj
-    if isFunction options
-      callback = options
-      options = {}
-
-    @key.then awsTrans.updateItem.bind(this, params, obj, options, callback)
+    @key.then awsTrans.updateItem.bind(this, params, obj, options)
 
   ###
   Table Operations
   ###
 
   # describe
-  describe: (callback = null) ->
+  describe: () ->
     debug 'describe() - ' + @name
     @parent.dynamo.describeTable(TableName: @name).promise()
 
   # drop
-  drop: (callback = null) ->
-    @parent.drop(@name, callback)
+  drop: () ->
+    @parent.drop(@name)
 
 module.exports = Table

@@ -66,7 +66,7 @@ describe 'aws-translators', () ->
         name: chance.name()
         parent:
           dynamo: {
-            deleteItem: (params, callback) ->
+            deleteItem: (params) ->
               promise: -> Promise.resolve('lol')
           }
 
@@ -74,14 +74,14 @@ describe 'aws-translators', () ->
       sandbox.restore()
 
     it 'should return an object', () ->
-      promise = lib.deleteItem.call(dynastyTable, 'foo', null, null,
+      promise = lib.deleteItem.call(dynastyTable, 'foo', null,
         hashKeyName: 'bar'
         hashKeyType: 'S'
       )
       expect(promise).to.be.an('object')
 
     it 'should return a promise', () ->
-      promise = lib.deleteItem.call(dynastyTable, 'foo', null, null,
+      promise = lib.deleteItem.call(dynastyTable, 'foo', null,
         hashKeyName: 'bar'
         hashKeyType: 'S'
       )
@@ -89,7 +89,7 @@ describe 'aws-translators', () ->
 
     it 'should call deleteItem of aws', () ->
       sandbox.spy(dynastyTable.parent.dynamo, "deleteItem")
-      lib.deleteItem.call(dynastyTable, 'foo', null, null,
+      lib.deleteItem.call(dynastyTable, 'foo', null,
         hashKeyName: 'bar'
         hashKeyType: 'S'
       )
@@ -98,7 +98,7 @@ describe 'aws-translators', () ->
     it 'should send the table name to AWS', () ->
       sandbox.spy(dynastyTable.parent.dynamo, "deleteItem")
 
-      promise = lib.deleteItem.call(dynastyTable, 'foo', null, null,
+      promise = lib.deleteItem.call(dynastyTable, 'foo', null,
         hashKeyName: 'bar'
         hashKeyType: 'S'
       )
@@ -111,7 +111,7 @@ describe 'aws-translators', () ->
     it 'should send the hash key to AWS', () ->
       sandbox.spy(dynastyTable.parent.dynamo, "deleteItem")
 
-      promise = lib.deleteItem.call(dynastyTable, 'foo', null, null,
+      promise = lib.deleteItem.call(dynastyTable, 'foo', null,
         hashKeyName: 'bar'
         hashKeyType: 'S'
       )
@@ -129,7 +129,6 @@ describe 'aws-translators', () ->
         dynastyTable,
           hash: 'lol'
           range: 'rofl',
-        null,
         null,
           hashKeyName: 'bar'
           hashKeyType: 'S'
@@ -159,7 +158,7 @@ describe 'aws-translators', () ->
         name: tableName
         parent:
           dynamo:
-            batchGetItem: (params, callback) ->
+            batchGetItem: (params) ->
               result = {}
               result.Responses = {}
               result.Responses[tableName] = [
@@ -174,7 +173,7 @@ describe 'aws-translators', () ->
 
     it 'should return a sane response', () ->
       lib.batchGetItem
-        .call dynastyTable, ['bar', 'baz'], null,
+        .call dynastyTable, ['bar', 'baz'],
           hashKeyName: 'foo'
           hashKeyType: 'S'
         .then (data) ->
@@ -194,7 +193,7 @@ describe 'aws-translators', () ->
         name: chance.name()
         parent:
           dynamo: {
-            getItem: (params, callback) ->
+            getItem: (params) ->
               promise: -> Promise.resolve(Item: rofl: S: 'lol')
           }
 
@@ -202,7 +201,7 @@ describe 'aws-translators', () ->
       sandbox.restore()
 
     it 'should return an object', () ->
-      promise = lib.getItem.call(dynastyTable, 'foo', null, null,
+      promise = lib.getItem.call(dynastyTable, 'foo', null,
         hashKeyName: 'bar'
         hashKeyType: 'S'
       )
@@ -211,7 +210,7 @@ describe 'aws-translators', () ->
 
     it 'should return a promise', () ->
       lib.getItem
-        .call dynastyTable, 'foo', null, null,
+        .call dynastyTable, 'foo', null,
           hashKeyName: 'bar'
           hashKeyType: 'S'
         .then (data) ->
@@ -219,7 +218,7 @@ describe 'aws-translators', () ->
 
     it 'should call getItem of aws', () ->
       sandbox.spy(dynastyTable.parent.dynamo, "getItem")
-      lib.getItem.call dynastyTable, 'foo', null, null,
+      lib.getItem.call dynastyTable, 'foo', null,
         hashKeyName: 'bar'
         hashKeyType: 'S'
 
@@ -230,7 +229,7 @@ describe 'aws-translators', () ->
       sandbox.spy(dynastyTable.parent.dynamo, "getItem")
 
       lib.getItem
-        .call dynastyTable, 'foo', null, null,
+        .call dynastyTable, 'foo', null,
           hashKeyName: 'bar'
           hashKeyType: 'S'
         .then () ->
@@ -241,7 +240,7 @@ describe 'aws-translators', () ->
     it 'should send the hash key to AWS', () ->
       sandbox.spy(dynastyTable.parent.dynamo, "getItem")
 
-      promise = lib.getItem.call dynastyTable, 'foo', null, null,
+      promise = lib.getItem.call dynastyTable, 'foo', null,
         hashKeyName: 'bar'
         hashKeyType: 'S'
 
@@ -258,7 +257,6 @@ describe 'aws-translators', () ->
         dynastyTable,
           hash: 'lol'
           range: 'rofl',
-        null,
         null,
           hashKeyName: 'bar'
           hashKeyType: 'S'
@@ -288,7 +286,7 @@ describe 'aws-translators', () ->
         name: chance.name()
         parent:
           dynamo: {
-            scan: (params, callback) ->
+            scan: (params) ->
               promise: -> Promise.resolve(Items: rofl: S: 'lol') # TODO: fix me
           }
 
@@ -296,7 +294,7 @@ describe 'aws-translators', () ->
       sandbox.restore()
 
     it 'should return an object', () ->
-      promise = lib.scan.call(dynastyTable, 'foo', null, null,
+      promise = lib.scan.call(dynastyTable, 'foo', null,
         hashKeyName: 'bar'
         hashKeyType: 'S'
       )
@@ -305,7 +303,7 @@ describe 'aws-translators', () ->
 
     it 'should return a promise', () ->
       lib.scan
-      .call dynastyTable, 'foo', null, null,
+      .call dynastyTable, 'foo', null,
         hashKeyName: 'bar'
         hashKeyType: 'S'
       .then (data) ->
@@ -313,7 +311,7 @@ describe 'aws-translators', () ->
 
     it 'should call scan of aws', () ->
       sandbox.spy(dynastyTable.parent.dynamo, "scan")
-      lib.scan.call dynastyTable, 'foo', null, null,
+      lib.scan.call dynastyTable, 'foo', null,
         hashKeyName: 'bar'
         hashKeyType: 'S'
 
@@ -331,7 +329,7 @@ describe 'aws-translators', () ->
         name: chance.name()
         parent:
           dynamo: {
-            query: (params, callback) ->
+            query: (params) ->
               promise: -> 
                 Promise.resolve Items: [{
                   foo: {S: 'bar'},
@@ -345,7 +343,7 @@ describe 'aws-translators', () ->
     it 'should translate the response', () ->
 
       lib.queryByHashKey
-        .call dynastyTable, 'bar', null,
+        .call dynastyTable, 'bar',
           hashKeyName: 'foo'
           hashKeyType: 'S'
           rangeKeyName: 'bar'
@@ -359,7 +357,7 @@ describe 'aws-translators', () ->
     it 'should call query', () ->
       sandbox.spy(dynastyTable.parent.dynamo, "query")
 
-      lib.queryByHashKey.call dynastyTable, 'bar', null,
+      lib.queryByHashKey.call dynastyTable, 'bar',
         hashKeyName: 'foo'
         hashKeyType: 'S'
         rangeKeyName: 'bar'
@@ -370,7 +368,7 @@ describe 'aws-translators', () ->
 
     it 'should send the table name and hash key to AWS', () ->
       sandbox.spy(dynastyTable.parent.dynamo, "query")
-      promise = lib.queryByHashKey.call dynastyTable, 'bar', null,
+      promise = lib.queryByHashKey.call dynastyTable, 'bar',
         hashKeyName: 'foo'
         hashKeyType: 'S'
         rangeKeyName: 'bar'
@@ -394,7 +392,7 @@ describe 'aws-translators', () ->
         name: chance.name()
         parent:
           dynamo: {
-            putItem: (params, callback) ->
+            putItem: (params) ->
               promise: -> Promise.resolve('lol')
           }
 
@@ -402,20 +400,20 @@ describe 'aws-translators', () ->
       sandbox.restore()
 
     it 'should return an object', () ->
-      promise = lib.putItem.call(dynastyTable, foo: 'bar', null, null)
+      promise = lib.putItem.call(dynastyTable, foo: 'bar', null)
 
       expect(promise).to.be.an('object')
 
     it 'should return a promise', () ->
       lib.putItem
-        .call(dynastyTable, foo: 'bar', null, null)
+        .call(dynastyTable, foo: 'bar', null)
         .then (data) ->
           expect(data).to.equal('lol')
 
     it 'should call putItem of aws', () ->
       sandbox.spy(dynastyTable.parent.dynamo, "putItem")
 
-      lib.putItem.call(dynastyTable, foo: 'bar', null, null)
+      lib.putItem.call(dynastyTable, foo: 'bar', null)
 
       expect(dynastyTable.parent.dynamo.putItem.calledOnce)
       expect(dynastyTable.parent.dynamo.putItem.getCall(0).args[0]).to.include.keys('Item', 'TableName')
@@ -424,7 +422,7 @@ describe 'aws-translators', () ->
       sandbox.spy(dynastyTable.parent.dynamo, "putItem")
 
       lib.putItem
-        .call(dynastyTable, foo: 'bar', null, null)
+        .call(dynastyTable, foo: 'bar', null)
         .then () ->
           expect(dynastyTable.parent.dynamo.putItem.calledOnce)
           params = dynastyTable.parent.dynamo.putItem.getCall(0).args[0]
@@ -433,7 +431,7 @@ describe 'aws-translators', () ->
     it 'should send the translated object to AWS', () ->
       sandbox.spy(dynastyTable.parent.dynamo, "putItem")
 
-      promise = lib.putItem.call dynastyTable, foo: 'bar', null, null
+      promise = lib.putItem.call dynastyTable, foo: 'bar', null
 
       expect(dynastyTable.parent.dynamo.putItem.calledOnce)
       params = dynastyTable.parent.dynamo.putItem.getCall(0).args[0]
@@ -453,7 +451,7 @@ describe 'aws-translators', () ->
         name: chance.name()
         parent:
           dynamo: {
-            updateItem: (params, callback) ->
+            updateItem: (params) ->
               promise: -> Promise.resolve('lol')
           }
       updateSpy = sandbox.spy(dynastyTable.parent.dynamo, "updateItem")
@@ -462,7 +460,7 @@ describe 'aws-translators', () ->
       sandbox.restore()
 
     it 'should automatically setup ExpressionAttributeNames mapping', () ->
-      promise = lib.updateItem.call(dynastyTable, {}, foo: 'bar', null, null,
+      promise = lib.updateItem.call(dynastyTable, {}, foo: 'bar', null,
         hashKeyName: 'bar'
         hashKeyType: 'S'
       )
@@ -470,7 +468,7 @@ describe 'aws-translators', () ->
       expect(updateSpy.getCall(0).args[0].ExpressionAttributeNames).to.eql({"#foo": 'foo'})
 
     it 'should allow incrementing numbers with option incrementNumber', () ->
-      promise = lib.updateItem.call(dynastyTable, {}, foo: 1, {incrementNumber: true}, null,
+      promise = lib.updateItem.call(dynastyTable, {}, foo: 1, {incrementNumber: true},
         hashKeyName: 'bar'
         hashKeyType: 'S'
       )
@@ -480,7 +478,7 @@ describe 'aws-translators', () ->
       expect(params.UpdateExpression).to.eql("ADD #foo :foo")
 
     it 'should allow decrementing numbers with option incrementNumber', () ->
-      promise = lib.updateItem.call(dynastyTable, {}, foo: -5, {incrementNumber: true}, null,
+      promise = lib.updateItem.call(dynastyTable, {}, foo: -5, {incrementNumber: true},
         hashKeyName: 'bar'
         hashKeyType: 'S'
       )

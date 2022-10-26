@@ -49,7 +49,7 @@ class Dynasty
   ###
 
   # Alter an existing table. Wrapper around AWS updateTable
-  alter: (name, params, callback) ->
+  alter: (name, params) ->
     debug "alter() - #{name}, #{JSON.stringify(params, null, 4)}"
     # We'll accept either an object with a key of throughput or just
     # an object with the throughput info
@@ -64,7 +64,7 @@ class Dynasty
     @dynamo.updateTable(awsParams).promise()
 
   # Create a new table. Wrapper around AWS createTable
-  create: (name, params, callback = null) ->
+  create: (name, params) ->
     debug "create() - #{name}, #{JSON.stringify(params, null, 4)}"
     throughput = params.throughput || {read: 10, write: 5}
 
@@ -142,12 +142,12 @@ class Dynasty
     @dynamo.createTable(awsParams).promise()
 
   # describe
-  describe: (name, callback) ->
+  describe: (name) ->
     debug "describe() - #{name}"
     @dynamo.describeTable(TableName: name).promise()
 
   # Drop a table. Wrapper around AWS deleteTable
-  drop: (name, callback = null) ->
+  drop: (name) ->
     debug "drop() - #{name}"
     params =
       TableName: name
@@ -155,15 +155,13 @@ class Dynasty
     @dynamo.deleteTable(params).promise()
 
   # List tables. Wrapper around AWS listTables
-  list: (params, callback) ->
+  list: (params) ->
     debug "list() - #{params}"
     awsParams = {}
 
     if params is not null
       if _.isString params
         awsParams.ExclusiveStartTableName = params
-      else if _.isFunction params
-        callback = params
       else if _.isObject params
         if params.limit is not null
           awsParams.Limit = params.limit
