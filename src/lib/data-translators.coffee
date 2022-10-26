@@ -14,20 +14,20 @@ fromDynamo = (dbObj) ->
 module.exports.fromDynamo = fromDynamo
 
 # WARN: Legacy from old dynasty, we don't want to break existing usage
-nullEmptyStrings = (obj) ->
+nullUndefined = (obj) ->
   if isArray obj
-    obj.map((value) -> nullEmptyStrings(value))
+    obj.map((value) -> nullUndefined(value))
   else if isObject obj
     Object.keys(obj).reduce((acc, key) ->
-      acc[key] = nullEmptyStrings(obj[key])
+      acc[key] = nullUndefined(obj[key])
       acc
     , {})
-  else if obj is undefined or (isString(obj) and obj.length is 0)
+  else if obj is undefined
     null
   else
     obj
 
 toDynamo = (item) ->
-  return AWS.DynamoDB.Converter.marshall(nullEmptyStrings(item))
+  return AWS.DynamoDB.Converter.marshall(nullUndefined(item), convertEmptyValues: true)
 
 module.exports.toDynamo = toDynamo
