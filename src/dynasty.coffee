@@ -23,13 +23,6 @@ class Dynasty
     @name = 'Dynasty'
     @tables = {}
 
-  loadAllTables: =>
-    @list()
-      .then (data) =>
-        for tableName in data.TableNames
-          @table(tableName)
-        return @tables
-
   # Given a name, return a Table object
   table: (name) ->
     @tables[name] = @tables[name] || new Table this, name
@@ -42,22 +35,6 @@ class Dynasty
   describe: (name) ->
     debug "describe() - #{name}"
     @dynamo.describeTable(TableName: name).promise()
-
-  # List tables. Wrapper around AWS listTables
-  list: (params) ->
-    debug "list() - #{params}"
-    awsParams = {}
-
-    if params is not null
-      if isString params
-        awsParams.ExclusiveStartTableName = params
-      else if isObject params
-        if params.limit is not null
-          awsParams.Limit = params.limit
-        else if params.start is not null
-          awsParams.ExclusiveStartTableName = params.start
-
-    @dynamo.listTables(awsParams).promise()
 
   # Useful if for example you are implementing triggers and you are getting
   # raw dynamo JSON data.
