@@ -1,6 +1,5 @@
 _ = require('lodash')
 dataTrans = require('./data-translators')
-Promise = require('bluebird')
 debug = require('debug')('dynasty:aws-translators')
 
 buildFilters = (target, filters) ->
@@ -21,24 +20,24 @@ buildExclusiveStartKey = (awsParams, params) ->
       awsValue[key] = dataTrans.toDynamo(params.exclusiveStartKey[key])
     awsParams.ExclusiveStartKey = awsValue
 
-module.exports.processAllPages = (deferred, dynamo, functionName, params)->
+# module.exports.processAllPages = (deferred, dynamo, functionName, params)->
 
-  stats =
-    Count: 0
+#   stats =
+#     Count: 0
 
-  resultHandler = (err, result) ->
-    if err then return deferred.reject(err)
+#   resultHandler = (err, result) ->
+#     if err then return deferred.reject(err)
 
-    deferred.notify dataTrans.fromDynamo result.Items
-    stats.Count += result.Count
-    if result.LastEvaluatedKey
-      params.ExclusiveStartKey = result.LastEvaluatedKey
-      dynamo[functionName] params, resultHandler
-    else
-      deferred.resolve stats
+#     deferred.notify dataTrans.fromDynamo result.Items
+#     stats.Count += result.Count
+#     if result.LastEvaluatedKey
+#       params.ExclusiveStartKey = result.LastEvaluatedKey
+#       dynamo[functionName] params, resultHandler
+#     else
+#       deferred.resolve stats
 
-  dynamo[functionName] params, resultHandler
-  deferred.promise
+#   dynamo[functionName] params, resultHandler
+#   deferred.promise
 
 
 module.exports.getKeySchema = (tableDescription) ->
@@ -79,27 +78,25 @@ module.exports.deleteItem = (params, options, callback, keySchema) ->
   awsParams =
     TableName: @name
     Key: getKey(params, keySchema)
-  @parent.dynamo.deleteItemAsync awsParams
+  @parent.dynamo.deleteItem(awsParams).promise()
 
 module.exports.batchGetItem = (params, callback, keySchema) ->
   awsParams = {}
   awsParams.RequestItems = {}
   name = @name
   awsParams.RequestItems[@name] = Keys: _.map(params, (param) -> getKey(param, keySchema))
-  @parent.dynamo.batchGetItemAsync(awsParams)
+  @parent.dynamo.batchGetItem(awsParams).promise()
     .then (data) ->
       dataTrans.fromDynamo(data.Responses[name])
-    .nodeify(callback)
 
 module.exports.getItem = (params, options, callback, keySchema) ->
   awsParams =
     TableName: @name
     Key: getKey(params, keySchema)
 
-  @parent.dynamo.getItemAsync(awsParams)
+  @parent.dynamo.getItem(awsParams).promise()
     .then (data)->
       dataTrans.fromDynamo(data.Item)
-    .nodeify(callback)
 
 module.exports.queryByHashKey = (key, callback, keySchema) ->
   awsParams =
@@ -114,10 +111,9 @@ module.exports.queryByHashKey = (key, callback, keySchema) ->
     AttributeValueList: [{}]
   awsParams.KeyConditions[hashKeyName].AttributeValueList[0][hashKeyType] = key
 
-  @parent.dynamo.queryAsync(awsParams)
+  @parent.dynamo.query(awsParams).promise()
     .then (data) ->
       dataTrans.fromDynamo(data.Items)
-    .nodeify(callback)
 
 module.exports.scan = (params, options, callback, keySchema) ->
   params ?= {}
@@ -132,10 +128,9 @@ module.exports.scan = (params, options, callback, keySchema) ->
 
   buildFilters(awsParams.ScanFilter, params.filters)
 
-  @parent.dynamo.scanAsync(awsParams)
+  @parent.dynamo.scan(awsParams).promise()
     .then (data)->
       dataTrans.fromDynamo(data.Items)
-    .nodeify(callback)
 
 module.exports.scanPaged = (params, options, callback, keySchema) ->
   params ?= {}
@@ -152,7 +147,7 @@ module.exports.scanPaged = (params, options, callback, keySchema) ->
   buildExclusiveStartKey(awsParams, params)
   buildFilters(awsParams.ScanFilter, params.filters)
 
-  @parent.dynamo.scanAsync(awsParams)
+  @parent.dynamo.scan(awsParams).promise()
     .then (data)->
       lastEvaluatedKey = dataTrans.fromDynamo(data.LastEvaluatedKey)
       res =
@@ -161,7 +156,6 @@ module.exports.scanPaged = (params, options, callback, keySchema) ->
       if lastEvaluatedKey
         res.lastEvaluatedKey = lastEvaluatedKey
       res
-    .nodeify(callback)
 
 module.exports.scanAll = (params, options, callback, keySchema) ->
   items = []
@@ -192,10 +186,9 @@ module.exports.query = (params, options, callback, keySchema) ->
   buildFilters(awsParams.KeyConditions, params.keyConditions)
   buildFilters(awsParams.QueryFilter, params.filters)
 
-  @parent.dynamo.queryAsync(awsParams)
+  @parent.dynamo.query(awsParams).promise()
     .then (data) ->
       dataTrans.fromDynamo(data.Items)
-    .nodeify(callback)
 
 module.exports.queryPaged = (params, options, callback, keySchema) ->
   params ?= {}
@@ -210,9 +203,7 @@ module.exports.queryPaged = (params, options, callback, keySchema) ->
   buildFilters(awsParams.KeyConditions, params.keyConditions)
   buildFilters(awsParams.QueryFilter, params.filters)
 
-
-
-  @parent.dynamo.queryAsync(awsParams)
+  @parent.dynamo.query(awsParams).promise()
     .then (data)->
       lastEvaluatedKey = dataTrans.fromDynamo(data.LastEvaluatedKey)
       res =
@@ -221,26 +212,23 @@ module.exports.queryPaged = (params, options, callback, keySchema) ->
       if lastEvaluatedKey
         res.lastEvaluatedKey = lastEvaluatedKey
       res
-    .nodeify(callback)
-
 
 module.exports.putItem = (obj, options, callback) ->
   awsParams =
     TableName: @name
-    Item: _.transform(obj, (res, val, key) ->
-      res[key] = dataTrans.toDynamo(val))
+    Item: dataTrans.toDynamo(obj)
 
-  @parent.dynamo.putItemAsync(awsParams)
+  @parent.dynamo.putItem(awsParams).promise()
 
 module.exports.updateItem = (params, obj, options, callback, keySchema) ->
   key = getKey(params, keySchema)
 
   # Set up the Expression Attribute Values map.
   expressionAttributeValues = _.mapKeys obj, (value, key) -> return ':' + key
-  expressionAttributeValues = _.mapValues expressionAttributeValues, (value, key) -> dataTrans.toDynamo(value)
+  expressionAttributeValues = dataTrans.toDynamo(expressionAttributeValues)
   # Allow setting arbitrary attribute values
   if options?.expressionAttributeValues
-    options.expressionAttributeValues = _.mapValues options.expressionAttributeValues, (value, key) -> dataTrans.toDynamo(value)
+    options.expressionAttributeValues = dataTrans.toDynamo(options.expressionAttributeValues)
     _.extend(expressionAttributeValues, options.expressionAttributeValues)
 
   # Setup ExpressionAttributeNames mapping key -> #key so we don't bump into
@@ -266,4 +254,4 @@ module.exports.updateItem = (params, obj, options, callback, keySchema) ->
 
   if options?.conditionExpression
     awsParams.ConditionExpression = options.conditionExpression
-  @parent.dynamo.updateItemAsync(awsParams)
+  @parent.dynamo.updateItem(awsParams).promise()

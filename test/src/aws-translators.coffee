@@ -5,7 +5,6 @@ chai.use(chaiAsPromised)
 chance = require('chance').Chance()
 lib = require('../lib/lib')["aws-translators"]
 sinon = require('sinon')
-Promise = require('bluebird')
 
 describe 'aws-translators', () ->
   describe '#getKeySchema', () ->
@@ -67,8 +66,8 @@ describe 'aws-translators', () ->
         name: chance.name()
         parent:
           dynamo: {
-            deleteItemAsync: (params, callback) ->
-              Promise.resolve('lol')
+            deleteItem: (params, callback) ->
+              promise: -> Promise.resolve('lol')
           }
 
     afterEach () ->
@@ -89,15 +88,15 @@ describe 'aws-translators', () ->
       promise.then((d) -> expect(d).to.equal('lol'))
 
     it 'should call deleteItem of aws', () ->
-      sandbox.spy(dynastyTable.parent.dynamo, "deleteItemAsync")
+      sandbox.spy(dynastyTable.parent.dynamo, "deleteItem")
       lib.deleteItem.call(dynastyTable, 'foo', null, null,
         hashKeyName: 'bar'
         hashKeyType: 'S'
       )
-      expect(dynastyTable.parent.dynamo.deleteItemAsync.calledOnce)
+      expect(dynastyTable.parent.dynamo.deleteItem.calledOnce)
 
     it 'should send the table name to AWS', () ->
-      sandbox.spy(dynastyTable.parent.dynamo, "deleteItemAsync")
+      sandbox.spy(dynastyTable.parent.dynamo, "deleteItem")
 
       promise = lib.deleteItem.call(dynastyTable, 'foo', null, null,
         hashKeyName: 'bar'
@@ -105,26 +104,26 @@ describe 'aws-translators', () ->
       )
 
       promise.then () ->
-        expect(dynastyTable.parent.dynamo.deleteItemAsync.calledOnce)
-        params = dynastyTable.parent.dynamo.deleteItemAsync.getCall(0).args[0]
+        expect(dynastyTable.parent.dynamo.deleteItem.calledOnce)
+        params = dynastyTable.parent.dynamo.deleteItem.getCall(0).args[0]
         expect(params.TableName).to.equal(dynastyTable.name)
 
     it 'should send the hash key to AWS', () ->
-      sandbox.spy(dynastyTable.parent.dynamo, "deleteItemAsync")
+      sandbox.spy(dynastyTable.parent.dynamo, "deleteItem")
 
       promise = lib.deleteItem.call(dynastyTable, 'foo', null, null,
         hashKeyName: 'bar'
         hashKeyType: 'S'
       )
 
-      expect(dynastyTable.parent.dynamo.deleteItemAsync.calledOnce)
-      params = dynastyTable.parent.dynamo.deleteItemAsync.getCall(0).args[0]
+      expect(dynastyTable.parent.dynamo.deleteItem.calledOnce)
+      params = dynastyTable.parent.dynamo.deleteItem.getCall(0).args[0]
       expect(params.Key).to.include.keys('bar')
       expect(params.Key.bar).to.include.keys('S')
       expect(params.Key.bar.S).to.equal('foo')
 
     it 'should send the hash and range key to AWS', () ->
-      sandbox.spy(dynastyTable.parent.dynamo, "deleteItemAsync")
+      sandbox.spy(dynastyTable.parent.dynamo, "deleteItem")
 
       promise = lib.deleteItem.call(
         dynastyTable,
@@ -137,8 +136,8 @@ describe 'aws-translators', () ->
           rangeKeyName: 'foo'
           rangeKeyType: 'S')
 
-      expect(dynastyTable.parent.dynamo.deleteItemAsync.calledOnce)
-      params = dynastyTable.parent.dynamo.deleteItemAsync.getCall(0).args[0]
+      expect(dynastyTable.parent.dynamo.deleteItem.calledOnce)
+      params = dynastyTable.parent.dynamo.deleteItem.getCall(0).args[0]
 
       expect(params.Key).to.include.keys('bar')
       expect(params.Key.bar).to.include.keys('S')
@@ -160,7 +159,7 @@ describe 'aws-translators', () ->
         name: tableName
         parent:
           dynamo:
-            batchGetItemAsync: (params, callback) ->
+            batchGetItem: (params, callback) ->
               result = {}
               result.Responses = {}
               result.Responses[tableName] = [
@@ -168,7 +167,7 @@ describe 'aws-translators', () ->
                 foo: S: "baz"
                 bazzoo: N: 123
               ]
-              Promise.resolve(result);
+              promise: -> Promise.resolve(result)
 
     afterEach () ->
       sandbox.restore()
@@ -195,8 +194,8 @@ describe 'aws-translators', () ->
         name: chance.name()
         parent:
           dynamo: {
-            getItemAsync: (params, callback) ->
-              Promise.resolve(Item: rofl: S: 'lol')
+            getItem: (params, callback) ->
+              promise: -> Promise.resolve(Item: rofl: S: 'lol')
           }
 
     afterEach () ->
@@ -219,41 +218,41 @@ describe 'aws-translators', () ->
           expect(data).to.deep.equal(rofl: 'lol')
 
     it 'should call getItem of aws', () ->
-      sandbox.spy(dynastyTable.parent.dynamo, "getItemAsync")
+      sandbox.spy(dynastyTable.parent.dynamo, "getItem")
       lib.getItem.call dynastyTable, 'foo', null, null,
         hashKeyName: 'bar'
         hashKeyType: 'S'
 
-      expect(dynastyTable.parent.dynamo.getItemAsync.calledOnce)
-      expect(dynastyTable.parent.dynamo.getItemAsync.getCall(0).args[0].TableName).to.equal(dynastyTable.name)
+      expect(dynastyTable.parent.dynamo.getItem.calledOnce)
+      expect(dynastyTable.parent.dynamo.getItem.getCall(0).args[0].TableName).to.equal(dynastyTable.name)
 
     it 'should send the table name to AWS', () ->
-      sandbox.spy(dynastyTable.parent.dynamo, "getItemAsync")
+      sandbox.spy(dynastyTable.parent.dynamo, "getItem")
 
       lib.getItem
         .call dynastyTable, 'foo', null, null,
           hashKeyName: 'bar'
           hashKeyType: 'S'
         .then () ->
-          expect(dynastyTable.parent.dynamo.getItemAsync.calledOnce)
-          params = dynastyTable.parent.dynamo.getItemAsync.getCall(0).args[0]
+          expect(dynastyTable.parent.dynamo.getItem.calledOnce)
+          params = dynastyTable.parent.dynamo.getItem.getCall(0).args[0]
           expect(params.TableName).to.equal(dynastyTable.name)
 
     it 'should send the hash key to AWS', () ->
-      sandbox.spy(dynastyTable.parent.dynamo, "getItemAsync")
+      sandbox.spy(dynastyTable.parent.dynamo, "getItem")
 
       promise = lib.getItem.call dynastyTable, 'foo', null, null,
         hashKeyName: 'bar'
         hashKeyType: 'S'
 
-      expect(dynastyTable.parent.dynamo.getItemAsync.calledOnce)
-      params = dynastyTable.parent.dynamo.getItemAsync.getCall(0).args[0]
+      expect(dynastyTable.parent.dynamo.getItem.calledOnce)
+      params = dynastyTable.parent.dynamo.getItem.getCall(0).args[0]
       expect(params.Key).to.include.keys('bar')
       expect(params.Key.bar).to.include.keys('S')
       expect(params.Key.bar.S).to.equal('foo')
 
     it 'should send the hash and range key to AWS', () ->
-      sandbox.spy(dynastyTable.parent.dynamo, "getItemAsync")
+      sandbox.spy(dynastyTable.parent.dynamo, "getItem")
 
       promise = lib.getItem.call(
         dynastyTable,
@@ -266,8 +265,8 @@ describe 'aws-translators', () ->
           rangeKeyName: 'foo'
           rangeKeyType: 'S')
 
-      expect(dynastyTable.parent.dynamo.getItemAsync.calledOnce)
-      params = dynastyTable.parent.dynamo.getItemAsync.getCall(0).args[0]
+      expect(dynastyTable.parent.dynamo.getItem.calledOnce)
+      params = dynastyTable.parent.dynamo.getItem.getCall(0).args[0]
 
       expect(params.Key).to.include.keys('bar')
       expect(params.Key.bar).to.include.keys('S')
@@ -278,7 +277,7 @@ describe 'aws-translators', () ->
       expect(params.Key.foo.S).to.equal('rofl')
 
 
-  describe '#scanAsync', () ->
+  describe '#scan', () ->
 
     dynastyTable = null
     sandbox = null
@@ -289,8 +288,8 @@ describe 'aws-translators', () ->
         name: chance.name()
         parent:
           dynamo: {
-            scanAsync: (params, callback) ->
-              Promise.resolve(Items: rofl: S: 'lol')
+            scan: (params, callback) ->
+              promise: -> Promise.resolve(Items: rofl: S: 'lol') # TODO: fix me
           }
 
     afterEach () ->
@@ -313,13 +312,13 @@ describe 'aws-translators', () ->
         expect(data).to.deep.equal(rofl: 'lol')
 
     it 'should call scan of aws', () ->
-      sandbox.spy(dynastyTable.parent.dynamo, "scanAsync")
+      sandbox.spy(dynastyTable.parent.dynamo, "scan")
       lib.scan.call dynastyTable, 'foo', null, null,
         hashKeyName: 'bar'
         hashKeyType: 'S'
 
-      expect(dynastyTable.parent.dynamo.scanAsync.calledOnce)
-      expect(dynastyTable.parent.dynamo.scanAsync.getCall(0).args[0].TableName).to.equal(dynastyTable.name)
+      expect(dynastyTable.parent.dynamo.scan.calledOnce)
+      expect(dynastyTable.parent.dynamo.scan.getCall(0).args[0].TableName).to.equal(dynastyTable.name)
 
   describe '#queryByHashKey', () ->
 
@@ -332,8 +331,9 @@ describe 'aws-translators', () ->
         name: chance.name()
         parent:
           dynamo: {
-            queryAsync: (params, callback) ->
-              Promise.resolve Items: [{
+            query: (params, callback) ->
+              promise: -> 
+                Promise.resolve Items: [{
                   foo: {S: 'bar'},
                   bar: {S: 'baz'}
                 }]
@@ -357,7 +357,7 @@ describe 'aws-translators', () ->
           ]
 
     it 'should call query', () ->
-      sandbox.spy(dynastyTable.parent.dynamo, "queryAsync")
+      sandbox.spy(dynastyTable.parent.dynamo, "query")
 
       lib.queryByHashKey.call dynastyTable, 'bar', null,
         hashKeyName: 'foo'
@@ -365,19 +365,19 @@ describe 'aws-translators', () ->
         rangeKeyName: 'bar'
         rangeKeyType: 'S'
 
-      expect(dynastyTable.parent.dynamo.queryAsync.calledOnce)
-      expect(dynastyTable.parent.dynamo.queryAsync.getCall(0).args[0]).to.include.keys('TableName', 'KeyConditions')
+      expect(dynastyTable.parent.dynamo.query.calledOnce)
+      expect(dynastyTable.parent.dynamo.query.getCall(0).args[0]).to.include.keys('TableName', 'KeyConditions')
 
     it 'should send the table name and hash key to AWS', () ->
-      sandbox.spy(dynastyTable.parent.dynamo, "queryAsync")
+      sandbox.spy(dynastyTable.parent.dynamo, "query")
       promise = lib.queryByHashKey.call dynastyTable, 'bar', null,
         hashKeyName: 'foo'
         hashKeyType: 'S'
         rangeKeyName: 'bar'
         rangeKeyType: 'S'
 
-      expect(dynastyTable.parent.dynamo.queryAsync.calledOnce)
-      params = dynastyTable.parent.dynamo.queryAsync.getCall(0).args[0]
+      expect(dynastyTable.parent.dynamo.query.calledOnce)
+      params = dynastyTable.parent.dynamo.query.getCall(0).args[0]
       expect(params.TableName).to.equal(dynastyTable.name)
       expect(params.KeyConditions.foo.ComparisonOperator).to.equal('EQ')
       expect(params.KeyConditions.foo.AttributeValueList[0].S)
@@ -394,8 +394,8 @@ describe 'aws-translators', () ->
         name: chance.name()
         parent:
           dynamo: {
-            putItemAsync: (params, callback) ->
-              Promise.resolve('lol')
+            putItem: (params, callback) ->
+              promise: -> Promise.resolve('lol')
           }
 
     afterEach () ->
@@ -413,30 +413,30 @@ describe 'aws-translators', () ->
           expect(data).to.equal('lol')
 
     it 'should call putItem of aws', () ->
-      sandbox.spy(dynastyTable.parent.dynamo, "putItemAsync")
+      sandbox.spy(dynastyTable.parent.dynamo, "putItem")
 
       lib.putItem.call(dynastyTable, foo: 'bar', null, null)
 
-      expect(dynastyTable.parent.dynamo.putItemAsync.calledOnce)
-      expect(dynastyTable.parent.dynamo.putItemAsync.getCall(0).args[0]).to.include.keys('Item', 'TableName')
+      expect(dynastyTable.parent.dynamo.putItem.calledOnce)
+      expect(dynastyTable.parent.dynamo.putItem.getCall(0).args[0]).to.include.keys('Item', 'TableName')
 
     it 'should send the table name to AWS', () ->
-      sandbox.spy(dynastyTable.parent.dynamo, "putItemAsync")
+      sandbox.spy(dynastyTable.parent.dynamo, "putItem")
 
       lib.putItem
         .call(dynastyTable, foo: 'bar', null, null)
         .then () ->
-          expect(dynastyTable.parent.dynamo.putItemAsync.calledOnce)
-          params = dynastyTable.parent.dynamo.putItemAsync.getCall(0).args[0]
+          expect(dynastyTable.parent.dynamo.putItem.calledOnce)
+          params = dynastyTable.parent.dynamo.putItem.getCall(0).args[0]
           expect(params.TableName).to.equal(dynastyTable.name)
 
     it 'should send the translated object to AWS', () ->
-      sandbox.spy(dynastyTable.parent.dynamo, "putItemAsync")
+      sandbox.spy(dynastyTable.parent.dynamo, "putItem")
 
       promise = lib.putItem.call dynastyTable, foo: 'bar', null, null
 
-      expect(dynastyTable.parent.dynamo.putItemAsync.calledOnce)
-      params = dynastyTable.parent.dynamo.putItemAsync.getCall(0).args[0]
+      expect(dynastyTable.parent.dynamo.putItem.calledOnce)
+      params = dynastyTable.parent.dynamo.putItem.getCall(0).args[0]
       expect(params.Item).to.be.an('object')
       expect(params.Item.foo).to.be.an('object')
       expect(params.Item.foo.S).to.equal('bar')
@@ -453,14 +453,13 @@ describe 'aws-translators', () ->
         name: chance.name()
         parent:
           dynamo: {
-            updateItemAsync: (params, callback) ->
-              Promise.resolve('lol')
+            updateItem: (params, callback) ->
+              promise: -> Promise.resolve('lol')
           }
-      updateSpy = sandbox.spy(dynastyTable.parent.dynamo, "updateItemAsync")
+      updateSpy = sandbox.spy(dynastyTable.parent.dynamo, "updateItem")
 
     afterEach () ->
       sandbox.restore()
-
 
     it 'should automatically setup ExpressionAttributeNames mapping', () ->
       promise = lib.updateItem.call(dynastyTable, {}, foo: 'bar', null, null,

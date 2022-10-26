@@ -9,161 +9,177 @@ describe 'toDynamo()', () ->
 
   it 'looks right when given a number', () ->
     num = chance.integer()
-    converted = dataTrans.toDynamo num
+    converted = dataTrans.toDynamo foo: num
     expect(converted).to.be.an 'object'
     expect(converted).to.deep.equal
-      'N': num.toString()
+      foo:
+        N: num.toString()
 
   it 'looks right when given a string', () ->
     str = chance.string()
-    converted = dataTrans.toDynamo str
+    converted = dataTrans.toDynamo foo: str
     expect(converted).to.be.an 'object'
     expect(converted).to.deep.equal
-      'S': str
+      foo:
+        S: str
 
   it 'converts an empty string to null', () ->
-    expect(dataTrans.toDynamo('')).to.deep.equal
-      NULL: true
+    expect(dataTrans.toDynamo(foo: '')).to.deep.equal
+      foo:
+        NULL: true
 
   it 'allows non empty strings', () ->
-    expect(dataTrans.toDynamo(' ')).to.deep.equal
-      S: ' '
+    expect(dataTrans.toDynamo(foo: ' ')).to.deep.equal
+      foo:
+        S: ' '
 
   it 'looks right when given a long string', () ->
     str = chance.string
       length: 1025
-    converted = dataTrans.toDynamo str
+    converted = dataTrans.toDynamo foo: str
     expect(converted).to.be.an 'object'
     expect(converted).to.deep.equal
-      'S': str
+      foo:
+        S: str
 
   it 'should convert objects to Maps', () ->
-    expect(dataTrans.toDynamo({foo: 'bar'})).to.eql({M: {foo: {S: 'bar'}}})
+    expect(dataTrans.toDynamo(moo: {foo: 'bar'})).to.deep.equal(moo: {M: {foo: {S: 'bar'}}})
 
   it 'looks right when given an array of numbers', () ->
-    arr = [0, 1, 2, 3]
+    arr = moo: [0, 1, 2, 3]
     converted = dataTrans.toDynamo arr
     expect(converted).to.be.an 'object'
     expect(converted).to.deep.equal
-      L: [
-        N: '0'
-      ,
-        N: '1'
-      ,
-        N: '2'
-      ,
-        N: '3'
-      ]
+      moo:
+        L: [
+          N: '0'
+        ,
+          N: '1'
+        ,
+          N: '2'
+        ,
+          N: '3'
+        ]
 
   it 'looks right when given an array of strings', () ->
-    arr = ['woof', 'miow', 'foo']
+    arr = moo: ['woof', 'miow', 'foo']
     converted = dataTrans.toDynamo arr
     expect(converted).to.be.an 'object'
     expect(converted).to.deep.equal
-      L: [
-        S: 'woof'
-      ,
-        S: 'miow'
-      ,
-        S: 'foo'
-      ]
+      moo:
+        L: [
+          S: 'woof'
+        ,
+          S: 'miow'
+        ,
+          S: 'foo'
+        ]
 
   it 'looks right when given an array of objects', () ->
-    arr = [{foo: 'bar'}, {bar: 'foo'}]
+    arr = moo: [{foo: 'bar'}, {bar: 'foo'}]
     converted = dataTrans.toDynamo arr
     expect(converted).to.be.an 'object'
-    expect(converted).to.eql({ L: [{M: {foo: {S: 'bar'}}},{M: {bar: {S: 'foo'}}}]})
+    expect(converted).to.deep.equal(moo: { L: [{M: {foo: {S: 'bar'}}},{M: {bar: {S: 'foo'}}}]})
 
   it 'looks right when given an array of nested objects', () ->
-    arr = [{foo: [1,2,3]}, {bar: {amazon: 'aws'}}]
+    arr = moo: [{foo: [1,2,3]}, {bar: {amazon: 'aws'}}]
     converted = dataTrans.toDynamo arr
     expect(converted).to.be.an 'object'
-    expect(converted).to.eql(
-      L:
-        [
-          M:
-            foo:
-              L: [
-                N:'1'
-              ,
-                N: '2'
-              ,
-                N: '3'
-              ]
-        ,
-          M:
-            bar:
-              M:
-                amazon:
-                  S: 'aws'
-        ]
+    expect(converted).to.deep.equal(
+      moo:
+        L:
+          [
+            M:
+              foo:
+                L: [
+                  N:'1'
+                ,
+                  N: '2'
+                ,
+                  N: '3'
+                ]
+          ,
+            M:
+              bar:
+                M:
+                  amazon:
+                    S: 'aws'
+          ]
     )
 
   it 'converts an empty array to a list', () ->
-    expect(dataTrans.toDynamo([])).to.eql(
-      L: []
+    expect(dataTrans.toDynamo(foo: [])).to.deep.equal(
+      foo:
+        L: []
     )
 
   it 'converts an array of strings with dupes to a list', () ->
-    expect(dataTrans.toDynamo(['1', '1'])).to.eql(
-      L: [
-        S: '1'
-      ,
-        S: '1'
-      ]
+    expect(dataTrans.toDynamo(foo: ['1', '1'])).to.deep.equal(
+      foo:
+        L: [
+          S: '1'
+        ,
+          S: '1'
+        ]
     )
 
   it 'deals with an array with empty strings', () ->
-    expect(dataTrans.toDynamo(['', ' '])).to.eql(
-      L: [
-        NULL: true
-      ,
-        S: ' '
-      ]
+    expect(dataTrans.toDynamo(foo: ['', ' '])).to.deep.equal(
+      foo:
+        L: [
+          NULL: true
+        ,
+          S: ' '
+        ]
     )
 
   it 'converts an array of numbers with duplicates to a list', () ->
-    expect(dataTrans.toDynamo([1, 1])).to.eql(
-      L: [
-        N: '1'
-      ,
-        N: '1'
-      ]
+    expect(dataTrans.toDynamo(foo: [1, 1])).to.deep.equal(
+      foo:
+        L: [
+          N: '1'
+        ,
+          N: '1'
+        ]
     )
 
   it 'supports null values', () ->
-    expect(dataTrans.toDynamo({foo: null})).to.deep.equal
-      'M':
-        foo:
-          'NULL': true
+    expect(dataTrans.toDynamo(bar: {foo: null})).to.deep.equal
+      bar:
+        'M':
+          foo:
+            'NULL': true
 
   it 'converts undefined to null', () ->
-    expect(dataTrans.toDynamo({foo: undefined})).to.deep.equal
-      'M':
-        foo:
-          'NULL': true
+    expect(dataTrans.toDynamo(bar: {foo: undefined})).to.deep.equal
+      bar:
+        'M':
+          foo:
+            'NULL': true
 
 describe 'fromDynamo()', () ->
 
   it 'converts dynamo NULLs to javascript nulls' , () ->
-    expect(dataTrans.fromDynamo({NULL: true})).to.be.null
+    expect(dataTrans.fromDynamo(foo: {NULL: true})).to.deep.equal foo: null
 
   it 'converts string lists correctly', () ->
     dynamoData =
-      L: [
-        S: 'foo'
-      ,
-        S: 'bar'
-      ]
-    expect(dataTrans.fromDynamo(dynamoData)).to.eql(['foo', 'bar'])
+      foo:
+        L: [
+          S: 'foo'
+        ,
+          S: 'bar'
+        ]
+    expect(dataTrans.fromDynamo(dynamoData)).to.deep.equal(foo: ['foo', 'bar'])
 
   it 'converts numbered lists correctly',() ->
     dynamoData =
-      M:
-        foo:
-          L: [
-            N: 0
-          ,
-            N: 1
-          ]
-    expect(dataTrans.fromDynamo(dynamoData)).to.eql({foo: [0, 1]})
+      bar:
+        M:
+          foo:
+            L: [
+              N: 0
+            ,
+              N: 1
+            ]
+    expect(dataTrans.fromDynamo(dynamoData)).to.deep.equal(bar: {foo: [0, 1]})

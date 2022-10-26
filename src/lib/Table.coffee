@@ -1,13 +1,16 @@
 awsTrans = require('./aws-translators')
 dataTrans = require('./data-translators')
-_ = require('lodash')
+size = require('lodash/size')
+compact = require('lodash/compact')
+values = require('lodash/values')
+isFunction = require('lodash/isFunction')
 debug = require('debug')('dynasty')
 
 class Table
 
   constructor: (@parent, @name) ->
     @key = @describe().then(awsTrans.getKeySchema).then (keySchema)=>
-      @hasRangeKey = (4 == _.size _.compact _.values keySchema)
+      @hasRangeKey = (4 == size compact values keySchema)
       keySchema
 
 
@@ -57,7 +60,7 @@ class Table
   # Wrapper around DynamoDB's putItem
   insert: (obj, options = {}, callback = null) ->
     debug "insert() - " + JSON.stringify obj
-    if _.isFunction options
+    if isFunction options
       callback = options
       options = {}
 
@@ -69,7 +72,7 @@ class Table
   # Wrapper around DynamoDB's updateItem
   update: (params, obj, options, callback = null) ->
     debug "update() - " + JSON.stringify obj
-    if _.isFunction options
+    if isFunction options
       callback = options
       options = {}
 
@@ -82,7 +85,7 @@ class Table
   # describe
   describe: (callback = null) ->
     debug 'describe() - ' + @name
-    @parent.dynamo.describeTableAsync(TableName: @name).nodeify(callback)
+    @parent.dynamo.describeTable(TableName: @name).promise()
 
   # drop
   drop: (callback = null) ->

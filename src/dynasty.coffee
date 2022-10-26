@@ -2,7 +2,6 @@
 
 aws = require('aws-sdk')
 _ = require('lodash')
-Promise = require('bluebird')
 debug = require('debug')('dynasty')
 
 # See http://vq.io/19EiASB
@@ -31,7 +30,6 @@ class Dynasty
       credentials.endpoint = new aws.Endpoint url
 
     @dynamo = new aws.DynamoDB(credentials)
-    Promise.promisifyAll @dynamo
     @name = 'Dynasty'
     @tables = {}
 
@@ -63,7 +61,7 @@ class Dynasty
         ReadCapacityUnits: throughput.read
         WriteCapacityUnits: throughput.write
 
-    @dynamo.updateTableAsync(awsParams).nodeify(callback)
+    @dynamo.updateTable(awsParams).promise()
 
   # Create a new table. Wrapper around AWS createTable
   create: (name, params, callback = null) ->
@@ -141,12 +139,12 @@ class Dynasty
 
     debug "creating table with params #{JSON.stringify(awsParams, null, 4)}"
 
-    @dynamo.createTableAsync(awsParams).nodeify(callback)
+    @dynamo.createTable(awsParams).promise()
 
   # describe
   describe: (name, callback) ->
     debug "describe() - #{name}"
-    @dynamo.describeTableAsync(TableName: name).nodeify(callback)
+    @dynamo.describeTable(TableName: name).promise()
 
   # Drop a table. Wrapper around AWS deleteTable
   drop: (name, callback = null) ->
@@ -154,7 +152,7 @@ class Dynasty
     params =
       TableName: name
 
-    @dynamo.deleteTableAsync(params).nodeify(callback)
+    @dynamo.deleteTable(params).promise()
 
   # List tables. Wrapper around AWS listTables
   list: (params, callback) ->
@@ -172,7 +170,7 @@ class Dynasty
         else if params.start is not null
           awsParams.ExclusiveStartTableName = params.start
 
-    @dynamo.listTablesAsync(awsParams)
+    @dynamo.listTables(awsParams).promise()
 
   # Useful if for example you are implementing triggers and you are getting
   # raw dynamo JSON data.

@@ -16,6 +16,9 @@
     "type": "git",
     "url": "https://github.com/victorquinn/dynasty.git"
   },
+  "engines": {
+    "node": ">=16"
+  },
   "licenses": [
     {
       "type": "MIT",
@@ -27,21 +30,21 @@
     "test"
   ],
   "devDependencies": {
-    "chance": "^0.8.0",
     "chai": "1.5",
+    "chai-as-promised": "~3.3.1",
+    "chance": "^0.8.0",
+    "diff": "^1.0.8",
+    "docco": "~0.6.2",
     "grunt": "*",
     "grunt-cli": "*",
     "grunt-coffeelint": "*",
     "grunt-contrib-coffee": "^0.12.0",
     "grunt-contrib-watch": "*",
-    "grunt-simple-mocha": "*",
     "grunt-shell": "~0.4.0",
+    "grunt-simple-mocha": "*",
     "mocha": "*",
     "requirejs": "2.1.6",
-    "sinon": "1.7.3",
-    "chai-as-promised": "~3.3.1",
-    "docco": "~0.6.2",
-    "diff": "^1.0.8"
+    "sinon": "1.7.3"
   },
   "scripts": {
     "build": "grunt coffee",
@@ -62,11 +65,11 @@
     "database"
   ],
   "dependencies": {
-    "aws-sdk": "^2.2.32",
-    "bluebird": "^2.3.11",
-    "coffee-script": "^1.6.3",
+    "coffeescript": "1.12.6",
     "debug": "^2.1.0",
-    "lodash": "^3.10.1",
-    "require-directory": "^2.0.0"
+    "lodash": "4.17.21"
+  },
+  "peerDependencies": {
+    "aws-sdk": ">= 2.201.0 < 3"
   }
 }
