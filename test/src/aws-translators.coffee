@@ -287,7 +287,7 @@ describe 'aws-translators', () ->
         parent:
           dynamo: {
             scan: (params) ->
-              promise: -> Promise.resolve(Items: rofl: S: 'lol') # TODO: fix me
+              promise: -> Promise.resolve Items: [{ rofl: S: 'lol' }]
           }
 
     afterEach () ->
@@ -307,7 +307,7 @@ describe 'aws-translators', () ->
         hashKeyName: 'bar'
         hashKeyType: 'S'
       .then (data) ->
-        expect(data).to.deep.equal(rofl: 'lol')
+        expect(data).to.deep.equal([rofl: 'lol'])
 
     it 'should call scan of aws', () ->
       sandbox.spy(dynastyTable.parent.dynamo, "scan")
