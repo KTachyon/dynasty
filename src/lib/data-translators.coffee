@@ -1,7 +1,6 @@
 AWS = require('aws-sdk')
 isArray = require('lodash/isArray')
 isObject = require('lodash/isObject')
-isString = require('lodash/isString')
 
 fromDynamo = (dbObj) ->
   if isArray dbObj
