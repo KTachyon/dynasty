@@ -1,4 +1,9 @@
-_ = require('lodash')
+find = require('lodash/find')
+isObject = require('lodash/isObject')
+map = require('lodash/map')
+extend = require('lodash/extend')
+keys = require('lodash/keys')
+mapKeys = require('lodash/mapKeys')
 dataTrans = require('./data-translators')
 debug = require('debug')('dynasty:aws-translators')
 
@@ -17,16 +22,16 @@ buildExclusiveStartKey = (awsParams, params) ->
   if params.exclusiveStartKey
     awsValue = {}
     for key, value of params.exclusiveStartKey
-      awsValue[key] = dataTrans.toDynamo(params.exclusiveStartKey[key])
+      awsValue[key] = dataTrans.toDynamo(params.exclusiveStartKey[key]) # TODO: this needs testing and fix
     awsParams.ExclusiveStartKey = awsValue
 
 module.exports.getKeySchema = (tableDescription) ->
   getKeyAndType = (keyType) ->
-    keyName = _.find tableDescription.Table.KeySchema, (key) ->
+    keyName = find tableDescription.Table.KeySchema, (key) ->
       key.KeyType is keyType
     ?.AttributeName
 
-    keyDataType = _.find tableDescription.Table.AttributeDefinitions,
+    keyDataType = find tableDescription.Table.AttributeDefinitions,
     (attribute) ->
       attribute.AttributeName is keyName
     ?.AttributeType
@@ -41,7 +46,7 @@ module.exports.getKeySchema = (tableDescription) ->
   rangeKeyType: rangeKeyType
 
 getKey = (params, keySchema) ->
-  if !_.isObject params
+  if !isObject params
     params = hash: params+''
 
   key = {}
@@ -64,7 +69,7 @@ module.exports.batchGetItem = (params, keySchema) ->
   awsParams = {}
   awsParams.RequestItems = {}
   name = @name
-  awsParams.RequestItems[@name] = Keys: _.map(params, (param) -> getKey(param, keySchema))
+  awsParams.RequestItems[@name] = Keys: map(params, (param) -> getKey(param, keySchema))
   @parent.dynamo.batchGetItem(awsParams).promise()
     .then (data) ->
       dataTrans.fromDynamo(data.Responses[name])
@@ -204,12 +209,12 @@ module.exports.updateItem = (params, obj, options, keySchema) ->
   key = getKey(params, keySchema)
 
   # Set up the Expression Attribute Values map.
-  expressionAttributeValues = _.mapKeys obj, (value, key) -> return ':' + key
+  expressionAttributeValues = mapKeys obj, (value, key) -> return ':' + key
   expressionAttributeValues = dataTrans.toDynamo(expressionAttributeValues)
   # Allow setting arbitrary attribute values
   if options?.expressionAttributeValues
     options.expressionAttributeValues = dataTrans.toDynamo(options.expressionAttributeValues)
-    _.extend(expressionAttributeValues, options.expressionAttributeValues)
+    extend(expressionAttributeValues, options.expressionAttributeValues)
 
   # Setup ExpressionAttributeNames mapping key -> #key so we don't bump into
   # reserved words
@@ -223,7 +228,7 @@ module.exports.updateItem = (params, obj, options, keySchema) ->
       "##{key} :#{key}"
     else
       "##{key} = :#{key}"
-  updateExpression = "#{action} " + _.keys(_.mapKeys obj, calcUpdateExpression).join ','
+  updateExpression = "#{action} " + keys(mapKeys obj, calcUpdateExpression).join ','
 
   awsParams =
     TableName: @name

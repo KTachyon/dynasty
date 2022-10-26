@@ -77,8 +77,4 @@ class Table
     debug 'describe() - ' + @name
     @parent.dynamo.describeTable(TableName: @name).promise()
 
-  # drop
-  drop: () ->
-    @parent.drop(@name)
-
 module.exports = Table
