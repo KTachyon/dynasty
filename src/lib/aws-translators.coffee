@@ -21,9 +21,7 @@ scanFilterFunc = (target, filter) ->
 buildExclusiveStartKey = (awsParams, params) ->
   if params.exclusiveStartKey
     awsValue = {}
-    for key, value of params.exclusiveStartKey
-      awsValue[key] = dataTrans.toDynamo(params.exclusiveStartKey[key]) # TODO: this needs testing and fix
-    awsParams.ExclusiveStartKey = awsValue
+    awsParams.ExclusiveStartKey = dataTrans.toDynamo(params.exclusiveStartKey)
 
 module.exports.getKeySchema = (tableDescription) ->
   getKeyAndType = (keyType) ->
@@ -140,23 +138,6 @@ module.exports.scanPaged = (params, options, keySchema) ->
       if lastEvaluatedKey
         res.lastEvaluatedKey = lastEvaluatedKey
       res
-
-module.exports.scanAll = (params, options, keySchema) ->
-  items = []
-  page = 0
-  scanNext = (exclusiveStartKey) =>
-    page++
-    if exclusiveStartKey?
-      options.exclusiveStartKey = exclusiveStartKey
-    #console.log("Scanning page #{page} (#{items.length} fetched so far)")
-    @scanPaged(params, options)
-      .then (res) ->
-        items = items.concat(res.items)
-        if res.lastEvaluatedKey
-          scanNext(exclusiveStartKey)
-        else
-          items
-  scanNext()
 
 module.exports.query = (params, options, keySchema) ->
   params ?= {}

@@ -73,12 +73,12 @@ describe 'aws-translators', () ->
     afterEach () ->
       sandbox.restore()
 
-    it 'should return an object', () ->
+    it 'should return a promise', () ->
       promise = lib.deleteItem.call(dynastyTable, 'foo', null,
         hashKeyName: 'bar'
         hashKeyType: 'S'
       )
-      expect(promise).to.be.an('object')
+      expect(promise).to.be.a('promise')
 
     it 'should return a promise', () ->
       promise = lib.deleteItem.call(dynastyTable, 'foo', null,
@@ -200,13 +200,13 @@ describe 'aws-translators', () ->
     afterEach () ->
       sandbox.restore()
 
-    it 'should return an object', () ->
+    it 'should return a promise', () ->
       promise = lib.getItem.call(dynastyTable, 'foo', null,
         hashKeyName: 'bar'
         hashKeyType: 'S'
       )
 
-      expect(promise).to.be.an('object')
+      expect(promise).to.be.a('promise')
 
     it 'should return a promise', () ->
       lib.getItem
@@ -292,13 +292,13 @@ describe 'aws-translators', () ->
     afterEach () ->
       sandbox.restore()
 
-    it 'should return an object', () ->
+    it 'should return a promise', () ->
       promise = lib.scan.call(dynastyTable, 'foo', null,
         hashKeyName: 'bar'
         hashKeyType: 'S'
       )
 
-      expect(promise).to.be.an('object')
+      expect(promise).to.be.a('promise')
 
     it 'should return a promise', () ->
       lib.scan
@@ -316,6 +316,92 @@ describe 'aws-translators', () ->
 
       expect(dynastyTable.parent.dynamo.scan.calledOnce)
       expect(dynastyTable.parent.dynamo.scan.getCall(0).args[0].TableName).to.equal(dynastyTable.name)
+
+  describe '#scanPaged', () ->
+
+    dynastyTable = null
+    sandbox = null
+    scanStub = null
+
+    beforeEach () ->
+      sandbox = sinon.sandbox.create()
+      scanStub = sandbox.stub().returns(promise: ->
+        Promise.resolve(
+          Items: [{ rofl: S: 'lol' }]
+          LastEvaluatedKey:
+            foo: {N: '1993'}
+            bar: {S: 'hello'}
+          Count: 1
+        )
+      )
+      dynastyTable =
+        name: chance.name()
+        parent:
+          dynamo: {
+            scan: scanStub
+          }
+
+    afterEach () ->
+      sandbox.restore()
+
+    context 'with exclusiveStartKey', ->
+      it 'returns items, count and last evaluated key', () ->
+        lib.scanPaged.call dynastyTable, { exclusiveStartKey: {foo: 123, bar:'hi'} }, null,
+          hashKeyName: 'bar'
+          hashKeyType: 'S'
+        .then (data) ->
+          expect(data).to.deep.equal(
+            items: [rofl: 'lol']
+            count: 1
+            lastEvaluatedKey:
+              foo: 1993
+              bar: 'hello'
+          )
+
+      it 'calls aws with the proper ExclusiveStartKey', () ->
+        lib.scanPaged.call dynastyTable, { exclusiveStartKey: {foo: 123, bar:'hi'} }, null,
+          hashKeyName: 'bar'
+          hashKeyType: 'S'
+        .then () ->
+          expect(scanStub.getCall(0).args[0].ExclusiveStartKey).to.deep.equal(
+            foo: {N: '123'}
+            bar: {S: 'hi'}
+          )
+
+      it 'the LastEvaluatedKey gets passed properly to aws on the next page call', () ->
+        lib.scanPaged.call dynastyTable, {}, null,
+          hashKeyName: 'bar'
+          hashKeyType: 'S'
+        .then ({lastEvaluatedKey}) ->
+          lib.scanPaged.call dynastyTable, { exclusiveStartKey: lastEvaluatedKey }, null,
+            hashKeyName: 'bar'
+            hashKeyType: 'S'
+          .then () ->
+            expect(scanStub.getCall(1).args[0].ExclusiveStartKey).to.deep.equal(
+              foo: {N: '1993'}
+              bar: {S: 'hello'}
+            )
+
+    context 'without exclusiveStartKey', ->
+      it 'returns items, count and last evaluated key', () ->
+        lib.scanPaged.call dynastyTable, {}, null,
+          hashKeyName: 'bar'
+          hashKeyType: 'S'
+        .then (data) ->
+          expect(data).to.deep.equal(
+            items: [rofl: 'lol']
+            count: 1
+            lastEvaluatedKey:
+              foo: 1993
+              bar: 'hello'
+          )
+
+      it 'calls aws without the ExclusiveStartKey', ->
+        lib.scanPaged.call dynastyTable, {}, null,
+          hashKeyName: 'bar'
+          hashKeyType: 'S'
+        .then () ->
+          expect(scanStub.getCall(0).args[0].ExclusiveStartKey).to.equal(undefined)
 
   describe '#queryByHashKey', () ->
 
@@ -398,10 +484,10 @@ describe 'aws-translators', () ->
     afterEach () ->
       sandbox.restore()
 
-    it 'should return an object', () ->
+    it 'should return a promise', () ->
       promise = lib.putItem.call(dynastyTable, foo: 'bar', null)
 
-      expect(promise).to.be.an('object')
+      expect(promise).to.be.a('promise')
 
     it 'should return a promise', () ->
       lib.putItem

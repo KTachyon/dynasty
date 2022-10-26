@@ -39,35 +39,35 @@ describe 'Dynasty', () ->
 
     describe 'remove()', () ->
 
-      it 'should return an object', () ->
+      it 'should return a promise', () ->
         promise = @table.remove chance.name()
-        expect(promise).to.be.an('object')
+        expect(promise).to.be.a('promise')
 
     describe 'batchFind()', () ->
 
       it 'works with an array of keys', () ->
         promise = @table.batchFind [chance.name()]
-        expect(promise).to.be.an('object')
+        expect(promise).to.be.a('promise')
 
     describe 'find()', () ->
 
       it 'works with just a string', () ->
         promise = @table.find chance.name()
-        expect(promise).to.be.an('object')
+        expect(promise).to.be.a('promise')
 
       it 'works with an object with just a hash key', () ->
         promise = @table.find
           hash: chance.name()
-        expect(promise).to.be.an('object')
+        expect(promise).to.be.a('promise')
 
       it 'works with an object with both a hash and range key', () ->
         promise = @table.find
           hash: chance.name()
           range: chance.name()
-        expect(promise).to.be.an('object')
+        expect(promise).to.be.a('promise')
 
     describe 'describe()', () ->
 
       it 'should return an object', () ->
         promise = @table.describe()
-        expect(promise).to.be.an('object')
+        expect(promise).to.be.a('promise')

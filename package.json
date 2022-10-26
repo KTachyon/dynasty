@@ -30,8 +30,8 @@
     "test"
   ],
   "devDependencies": {
-    "chai": "1.5",
-    "chai-as-promised": "~3.3.1",
+    "chai": "^4.3.6",
+    "chai-as-promised": "^7.1.1",
     "chance": "^0.8.0",
     "diff": "^1.0.8",
     "docco": "~0.6.2",
@@ -44,7 +44,7 @@
     "grunt-simple-mocha": "*",
     "mocha": "*",
     "requirejs": "2.1.6",
-    "sinon": "1.7.3"
+    "sinon": "^4.5.0"
   },
   "scripts": {
     "build": "grunt coffee",
