@@ -274,7 +274,6 @@ describe 'aws-translators', () ->
       expect(params.Key.foo).to.include.keys('S')
       expect(params.Key.foo.S).to.equal('rofl')
 
-
   describe '#scan', () ->
 
     dynastyTable = null

@@ -128,7 +128,6 @@ module.exports.scanPaged = (params, options, keySchema) ->
 
   awsParams.AttributesToGet = params.attrsGet if params.attrsGet
 
-
   buildExclusiveStartKey(awsParams, params)
   buildFilters(awsParams.ScanFilter, params.filters)
 
